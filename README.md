@@ -39,7 +39,7 @@ The get script has a little bit more going on but is similar in setup to the sen
 
 This line defines the sheet deployment, column to find & the amount of strings to return. replace:<br>
 GOOGLE_SHEET_SCRIPT_DEPLOYMENT_URL_HERE - With the deployment URL<br>
-GOOGLE_SHEET_COLUMN_TITLE_HERE - With the column name in the sheet to find
+GOOGLE_SHEET_COLUMN_TITLE_HERE - With the column name in the sheet to find<br>
 amount=1 - With the amount you want to get. Set it high or to the desired amount if you are using the script as is. This was built for the solution I was making specifically.
 
 > document.getElementById("<FIELD_NAME_HERE>").innerHTML = DisplayArray;
