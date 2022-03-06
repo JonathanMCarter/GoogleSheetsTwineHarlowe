@@ -63,7 +63,7 @@ Google Sheet App Script Setup: https://developers.google.com/apps-script/guides/
 ## F.A.Q
 > Can I use this code in my project?
 
-Of-course, all I ask is that you abide the licence on this repo and provide credit/attribution where necessary.
+Of-course, all I ask is that you abide by the licence on this repo and provide credit/attribution where necessary.
 
 > Can you edit this for my game?
 
