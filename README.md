@@ -6,7 +6,7 @@ Now I don't actually use Twine or google sheet code personally, so my experience
 
 # Usage & Setup
 ## Send Script (Twine Harlowe)
-In twine you'll need to setup a script to send the data to the sheet, this is found in the send folder of this repo as a text file. In this file there are 2 lines to change for your project:
+In twine you'll need to setup a script to send the data to the sheet, this is found in the send folder of this repo as a .js file. In this file there are 2 lines to change for your project:
 
 > var sendData = [harlowe.State.variables['word'], "Nature"];
 
