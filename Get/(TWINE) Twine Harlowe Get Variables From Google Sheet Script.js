@@ -1,25 +1,47 @@
-<script src="jquery-3.3.1.min.js"></script>
+<div id="tab">Loading...</div>
 
 <script>
-
-$.ajax({
-url:"<GOOGLE_SHEET_SCRIPT_DEPLOYMENT_URL_HERE>?column=GOOGLE_SHEET_COLUMN_TITLE_HERE&amount=1",
-method: "GET",
-dataType: "json"
-}).done(function(data) 
-{
-// Initilise Variables
-var DataArray, DisplayArray;
-// Sets the DataArray to what was returned from the google sheet
-DataArray = data;
-// Sets the default value of the DisplayArray to nothing...
-DisplayArray = "";
-// For Each element in the DataArray, add a <br> (a break/new line) to the string
-for (i in DataArray) 
-{
-	DisplayArray += DataArray[i] + "<br>";
+function getData() {
+  $.ajax({
+    url: "<GOOGLE SHEET APP SCRIPT DEPLOYMENT WEB CODE URL HERE>?range=<RANGEA>:<RANGEB>",
+    method: "GET",
+    dataType: "json"
+  }).done(function(data) {
+    createTable('tab', data, 'auto');
+  });
 }
-// Sends the final DisplayArray to the HTML code that is above this script 
-document.getElementById("TestElement").innerHTML = DisplayArray;
-});
+
+function createTable(tab, data, width) {
+  var tar = document.getElementById(tab);
+  var table = document.createElement('TABLE');
+
+  table.border = '1';
+
+  var tbdy = document.createElement('TBODY');
+
+  table.appendChild(tbdy);
+
+
+  for (var j = 0; j < data.length; j++) {
+    var tr = document.createElement('TR');
+    tbdy.appendChild(tr);
+
+    for (var k = 0; k < data[j].length; k++) {
+      var td = document.createElement('TD');
+      td.width = width;
+      
+      if (j == 0)
+      	td.innerHTML = data[j][k].bold();
+      else
+          td.innerHTML = data[j][k];
+          
+      tr.appendChild(td);
+    }
+  }
+
+tar.innerHTML = "";
+  tar.appendChild(table);
+}
+
+getData();
 </script>
