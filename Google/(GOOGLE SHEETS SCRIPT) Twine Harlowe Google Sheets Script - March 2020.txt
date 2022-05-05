@@ -18,224 +18,80 @@ var SCRIPT_PROP = PropertiesService.getScriptProperties();
 // Calls the Custom Get Function & returns its return value
 function doGet(e) 
 {
-  return GetValues(e);
+  return getValues(e);
 }
 
  
 function doPost(e)
 {
- return AddWordToSheet(e);
+ return addWordToSheet(e);
 }
  
 
 
 
-// Gets the values in Column 2, Row 1 and returns them in a JSON string to be used in engine
-function GetValues(e)
+// Gets the values in the range defined and returns them...
+function getValues(e)
 {
     var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
     var sheet = doc.getSheetByName(SHEET_NAME);
+
+    var rangeRaw = e.parameter.range;
+
+    var rangeSplit = rangeRaw.toString().split(':');
+    var reg = new RegExp("[A-Z]");
+
+    var startColumn = letterToColumn(reg.exec(rangeSplit[0]).toString());
+    var endColumn = letterToColumn(reg.exec(rangeSplit[1]).toString());
+    var startRow = rangeSplit[0][1];
+    var endRow = rangeSplit[1][1];
   
     // Needed to get data
-    var colToRead = 0;
-    var headersss = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  
-    
-    for (var i = 0; i < headersss.length; i++)
-    {
-        if (headersss[i] == e.parameter.column)
-        {
-          colToRead = i+1;
-          break;
-        }
-      
-    }
-  
-  
-  
-    var numRows = sheet.getLastRow();
-    var readData = sheet.getRange(2, colToRead, numRows).getValues();
-    var rowLimit = 0;
-  
-    // finds the first free row, from the top as going from the bottom is wayyyyy to slow...
-    for (var i = 0; i < readData.length; i++)
-    {
-        if (readData[i][0] == "")
-        {
-            rowLimit = i;
-        }
-    }
-  
-  
-  
-    // Array that holds all the words you wish to get - removes blanks & no responses that it gets at the same time
-    var Array = sheet.getRange(2, colToRead, rowLimit).getValues();
-    var ClearedArray = [];
-    var DupsArray = [];
-  
-    for (var i = 0; i < Array.length; i++)
-    {
-        if (Array[i] != "")
-        {
-            if (Array[i] != "no response")
-            {
-                ClearedArray.push(Array[i]);
-            }
-        }
-    }
-  
+    var data = sheet.getRange(startRow, startColumn, endRow - startRow + 1, endColumn - startColumn + 1).getValues();
+    data = clearNullsFromArray(data); // Removes blanks & no responses that it gets at the same time...
 
-  
-    // Checks for duplicate words (not perfect, as it can't check for capitals right now - been hard enough getting it to work in the first place, 0 debugging tools make this really hard for what it is!!!!)
-    // Sadly this bit was not my work, google was my friend here as every version of an array duplicate check i knew of just would not work with this language, thankfully this did, credit below
-    // Soruce: https://stackoverflow.com/questions/16747798/delete-duplicate-elements-from-an-array
-    // Credit: Denys Séguret, 2013
-    var m = {}, newarr = []
-    
-    for (var i = 0; i < ClearedArray.length; i++) 
-    {
-        var v = ClearedArray[i];
-        
-        if (!m[v]) 
-        {
-            newarr.push(v);
-            m[v]=true;
-        }
-    }
-  
-    DupsArray = newarr;
-  
-  
-  
-  
-    var RandNumbersArray = [];  
-  
-    // getting random numbers - but no repeats!
-    // Once again not mine, but adapted for this project
-    // Source: https://stackoverflow.com/questions/8378870/generating-unique-random-numbers-integers-between-0-and-x
-    // Credit: Rob W & user11748261, 2020
-  
-    var limit = DupsArray.length,
-    amountcheck = e.parameter.amount,
-    unique_random_numbers = [];
-
-  
-    while (unique_random_numbers.length < limit) 
-    {
-        var random_number = Math.floor(Math.random()*DupsArray.length-1) + 1;
-      
-        if (random_number != DupsArray.length)
-        {
-            if (unique_random_numbers.indexOf(random_number) == -1) 
-            { 
-                unique_random_numbers.push( random_number );
-            }
-        }
-    }
-  
-    RandNumbersArray = unique_random_numbers;
-
-  
-  
-    //Randomising the resulting elements to be sent back to Twine for use (also limits to the number you request in the params you send to this script)
-    var FinalArray = [];
-
-    for (var i = 0; i < e.parameter.amount; i++) 
-    { 
-        if (RandNumbersArray[i] == null)
-        {
-           FinalArray.push("");
-        }
-        else
-        {
-           FinalArray.push(DupsArray[RandNumbersArray[i]]);
-        }
-    }
-
-    
     return ContentService
-    .createTextOutput(JSON.stringify(FinalArray))
+    .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
 
+// Credit
+// https://stackoverflow.com/questions/21229180/convert-column-index-into-corresponding-column-letter
+function letterToColumn(letter)
+{
+  var column = 0, length = letter.length;
+  for (var i = 0; i < length; i++)
+  {
+    column += (letter.charCodeAt(i) - 64) * Math.pow(26, length - i - 1);
+  }
+
+  return column;
+}
 
 
 
-
-// A little function that gets the number of rows inn the sheet
-// https://www.portent.com/blog/analytics/google-app-script-1.htm
-function FindRows(colToCheck2) 
-{    
-    var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
-    var sheet = doc.getSheetByName(SHEET_NAME);
-    var numRows2 = sheet.getLastRow();
-    var readData2 = sheet.getRange(2, colToCheck2, numRows2).getValues();
-
-    // finds the first free row, from the top as going from the bottom is wayyyyy to slow...
-    for (var i = 0; i < readData2.length; i++)
+// Clears any null or blank cells from the result as best as it can...
+function clearNullsFromArray(data)
+{
+    var filteredData = [];
+  
+    for (var i = 0; i < data.length; i++)
     {
-        if (readData2[i][0] == "")
+        if (data[i] != "" && data[i] != null)
         {
-            return i+1;
+          filteredData.push(data[i]);
         }
     }
+
+    return filteredData;
 }
-
-
-
-
-// Gets the defined number of array values and returns them
-function ChooseRandom(Input, NumberToCheck)
-{
-  var RtnArray = [];
-  var MaxNumber = FindRows(2);
-  
-    if (Input.length > 0)
-    {
-        var NumberofWords = NumberToCheck;
-
-        if (Input.length < NumberofWords)
-        {
-            for (var i = 0; i < Input.length; i++)
-            {
-                var value = "";
-    
-                // stops if the new value is already in the new array
-                //while (RtnArray.indexOf(value) != -1)
-                //{
-                    value = Input[GetRandomIntValue(MaxNumber)]; 
-                //}
-        
-                RtnArray.push(value);
-            }
-        }
-    }
-    else
-    {
-        RtnArray.push("Error Code 1: No values found on file.");
-    }
-  
-  return RtnArray;
-}
-
-
-
-// gets a random int value between 1 & the max number of rows
-function GetRandomIntValue(Max)
-{
-  var Number = Math.floor((Math.random() * Max))
-  return Number;
-}
-
-
-
 
 
 // Custom Alterations that allow the inputted data to be placed into any column defined by the user
 // In Twine the following should be sent a word to the sheet - (word to input, column name) 
 // This makes e[0] = the word the user added & e[1] the column that it shoudl be inserted into
-function AddWordToSheet(e)
+function addWordToSheet(e)
 {
   // Stops data overriding by accident
   var lock = LockService.getPublicLock();
@@ -247,10 +103,7 @@ function AddWordToSheet(e)
     var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("key"));
     var sheet = doc.getSheetByName(SHEET_NAME);
     
-    
-    //var postData = e.postData.contents; //my code uses postData instead
-    
-    var eData = e.postData.contents;
+    var data = e.postData.contents;
     var data = JSON.parse(eData); //parse the postData from JSON
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     var nextRow = sheet.getLastRow()+1; // get next row
